@@ -1,0 +1,74 @@
+<html>
+<head>
+<!-- Include JQuery to display output in HTML easily. 
+	JQuery is not required for websocket communication itself. -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+
+	<h1>Websocket Basic Tutorial</h1>
+	<h2>Server Browser 2-way communication</h2>
+
+	<script>
+		var serverMessagesCount = 0;
+		var clientMessagesCount = 0;
+
+		/* 
+		 * Create a javascript websocket object using the URL from Java server endpoint 	
+		 * and connect to websocket endpoint.		
+		 */
+		var ws = new WebSocket("ws://" + window.location.host
+				+ "/web-socket-tutorial/server-endpoint");
+
+		// Javascript callback function when connection is established. 
+		ws.onopen = function() {
+			console.log("On Open");
+			$("#output").append("Openened connection to websocket<br/>");
+			clientLoop();
+		}
+
+		// Javascript callback function when messages is received from server.
+		ws.onmessage = function(msg) {
+			console.log("On Message = " + msg + " Count: "
+					+ serverMessagesCount);
+			$("#output").append(msg.data + "<br/>");
+
+			// Receive 5 messages maximum from server & then close websocket.
+			if (serverMessagesCount == 4) {
+				ws.close();
+			} else {
+				serverMessagesCount++;
+			}
+		}
+
+		// Javascript callback function when connection is closed.
+		ws.onclose = function(msg) {
+			console.log("On Close = " + msg);
+			$("#output").append("Closed connection to websocket<br/>");
+		}
+
+		// Simple function which send message to server every 2000 milliseconds.
+		function clientLoop() {
+			setTimeout(
+					function() {
+						// If websocket connection is open, send message to server.
+						if (ws.readyState == 1) {
+							var message = "[Browser -> Server]  A Message from browser to server. Count = "
+									+ clientMessagesCount;
+							ws.send(message);
+							$("#output").append(message + "<br/>");
+						}
+						// Send 5 messages maximum to server.
+						clientMessagesCount++;
+						if (clientMessagesCount < 5) {
+							clientLoop();
+						}
+					}, 2000);
+		}
+	</script>
+
+	<!-- Display exchange of messages in this div -->
+	<div id="output"></div>
+</body>
+
+</html>
